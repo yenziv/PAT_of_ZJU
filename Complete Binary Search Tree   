@@ -1,0 +1,143 @@
+#include<stdlib.h>
+#include<stdio.h>
+#include<math.h>
+
+
+
+
+
+struct node{
+	int data;
+	int left;
+	int right;
+}T[1003];
+
+int b[1000]={0};
+
+void insertH(int left,int right,int tree);
+int findNumOfLeft(int tree);
+int power(int a,int b);
+
+int main(){
+	int k,num,i,j;
+	int a[2001]={0};
+	
+	scanf("%d",&k);
+	//排序的思想是建一个a[2001];然后初始化为 0； 后来每读一个数num，就将a[num]=1，全部读完后在遍历数组，存入新的数组； 
+	for(i=0;i<k;i++){
+		scanf("%d",&num);
+		a[num]=1;
+	}
+	
+	j=0;
+	for(i=0;i<2001;i++){
+		if(a[i]==1){
+			b[j]=i;
+			j++;
+		}
+	}
+	
+	//下面建立结构数组形式的二叉树
+	for(i=1;i<=k;i++){
+		if(i*2<=k)
+			T[i].left=i*2;
+		else
+			T[i].left=-1;
+		if((i*2+1)<=k)
+			T[i].right=i*2+1;
+		else
+			T[i].right=-1;
+	} 
+	
+	
+
+	int adsss; 
+	insertH(0,k-1,1);
+	
+	for(i=1;i<=k;i++){
+		printf("%d",T[i].data);
+		if(i!=k)
+			printf(" ");
+	}
+	
+	return 0;
+}
+
+int findNumOfLeft(int head){//提供T的下标tree，返回包括他自己在内的节点的个是 
+	int tree;
+	tree=head;
+	int tmp=0;
+	int i;
+	int numof=0;
+	if(tree==-1)
+		return 0;
+	else if(T[tree].left==-1&&T[tree].right==-1)
+		return 1;
+	else {
+		while(T[tree].left!=-1){
+			tree=T[tree].left;
+			tmp++;
+		}
+		// 此时tmp记录了tree下有几层， 从倒数第二层开始，对每个节点的左右儿子遍历，
+		
+		/*
+		for(i=tree*power(2,tmp-1);i<=tree*power(2,tmp-1)+power(2,tmp-1)-1;i++){
+			if(T[i].left!=-1)
+				numof++;	
+			else
+				break;
+			if(T[i].right!=-1)
+				numof++;
+			else
+				break;
+		}
+		*/
+		
+		for(i=0;i<power(2,tmp-1);i++){
+			if(T[head*power(2,tmp-1)+i].left!=-1)
+				numof++;	
+			else
+				break;
+			if(T[head*power(2,tmp-1)+i].right!=-1)
+				numof++;
+			else
+				break;
+		}
+		
+		
+		return power(2,tmp)-1+numof;
+	}
+		
+	
+}
+
+int power(int a, int b){
+	
+	int i;
+	int num=a;
+	if(b!=0){
+		for(i=1;i<b;i++){
+			num=num*a;
+		}
+		return num;
+	}else
+		return 1;
+	
+	
+}
+
+void insertH(int left,int right,int tree){
+	int tmp;
+	if(left==right)
+		T[tree].data=b[left];
+	else{
+		tmp=findNumOfLeft(T[tree].left);
+	
+		T[tree].data=b[left+tmp];
+		if(T[tree].left!=-1)
+			insertH(left,left+tmp-1,T[tree].left);
+		if(T[tree].right!=-1)
+			insertH(left+tmp+1,right,T[tree].right);
+	}
+	
+}
