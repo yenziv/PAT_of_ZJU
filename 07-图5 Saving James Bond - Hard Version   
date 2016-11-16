@@ -1,0 +1,183 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<math.h>
+int D,N;
+int arry[100][2]={0}; //储存鳄鱼的坐标 
+int path[100][100]={0};//用来记录firstjump i时 的具体路径 
+int dist[100]={0};//在每次firstjump中循环利用 
+int numofpath[100][2]={0};  //0记录头结点i的最短步数，1记录出来的那个节点编号 
+
+typedef struct node{
+	int element[110];
+	int front;
+	int rear;
+}queue;
+queue* Q;
+
+void insertQ(int i,queue* Q){
+	Q->rear=Q->rear+1;
+	Q->element[Q->rear]=i;
+}
+
+int deleteQ(queue* Q){
+	Q->front=Q->front+1;
+	return Q->element[Q->front];
+	
+}
+
+double calcuDistance(int x1,int y1,int x2,int y2){
+ return sqrt((double)pow(x1-x2,2)+pow(y1-y2,2));	
+} 
+
+int firstjump(int a1,int a2){
+	if(calcuDistance(0,0,a1,a2)<=(7.5+D))   //diameter是直径的意思 不是半径 
+		return 1;
+	else
+		return 0;
+}
+
+int jump(int a1,int a2,int b1,int b2){
+	if(calcuDistance(a1,a2,b1,b2)<=D)
+		return 1;
+	else
+		return 0;
+	
+}
+
+int unweighted(int i){
+	int t,n,exit;
+	exit=-1;
+	//要考虑踩一个鳄鱼就上岸的情况
+	if( 50-abs(arry[i][0])<=D || 50-abs(arry[i][1])<=D ){
+		exit=i;
+		return exit;
+	} 
+	insertQ(i,Q);
+	while(Q->front!=Q->rear){
+		t=deleteQ(Q);
+		for(n=0;n<N;n++){
+			if(jump(arry[t][0],arry[t][1],arry[n][0],arry[n][1])&&dist[n]==0){
+				dist[n]=dist[t]+1;
+				path[i][n]=t;
+				insertQ(n,Q);
+				if( 50-abs(arry[n][0])<=D || 50-abs(arry[n][1])<=D ){
+					exit=n;
+					//test
+					/*
+					printf("%d 0000 %d %d ",dist[n],arry[exit][0],arry[exit][1]);
+					int aa=n;
+					while(aa!=i){
+						aa=path[i][aa];
+						printf("%d %d ",arry[aa][0],arry[aa][1]);
+					}
+					printf("\n");
+					*/ 
+					//
+					return exit;
+				}
+			}		
+		}
+		
+	}
+	return exit;
+	
+}
+
+
+typedef struct Snode{
+	int element[1000];
+	int top;
+}stack;
+
+void insertS(int i,stack* S){
+	S->element[++S->top]=i;
+}
+
+int deleteS(stack* S){
+	return S->element[S->top--];
+}
+
+
+int main(){
+	int tag=0;
+	scanf("%d %d",&N,&D);
+	
+	if(7.5+D>=50){  //要讨论一步跳上岸的情况 
+		printf("1");
+		return 0;
+	} 
+	
+	int i,j;
+	for(i=0;i<N;i++){
+		scanf("%d %d",&arry[i][0],&arry[i][1]);
+	}
+	
+	int exit;
+	Q=(queue*)malloc(sizeof(queue));
+	Q->front=Q->rear=0;
+	
+	for(i=0;i<N;i++){
+		//采用 无权图单源最短路算法
+		if(firstjump(arry[i][0],arry[i][1])){
+			//初始化 
+			for(j=0;j<N;j++){
+				dist[j]=0;
+			}
+			dist[i]=1;
+			Q->front=Q->rear=0;
+			//
+			exit=unweighted(i);
+			if(exit!=-1){
+				tag=1;
+				numofpath[i][0]=dist[exit];
+				numofpath[i][1]=exit;
+			}
+			
+		}
+		
+	}
+	
+	stack* S=(stack*)malloc(sizeof(stack));
+	S->top=-1;
+	int minDist=1000;
+	int min=100;
+	int begin;
+	if(tag==0){
+		printf("0");
+	}else{
+		for(i=0;i<N;i++){
+			if(numofpath[i][0]!=0&&numofpath[i][0]<minDist){   //写掉了不为零这个判断条件 
+				minDist=numofpath[i][0];
+			}
+		}
+		//先找到了最短路径，再看一下距离最近的最短路径 
+		for(i=0;i<N;i++){
+			if(numofpath[i][0]==minDist){
+				if(calcuDistance(0,0,arry[i][0],arry[i][1])<min){
+					min=calcuDistance(0,0,arry[i][0],arry[i][1]);
+					begin=i;
+				}
+			}
+		}
+		
+		
+		i=numofpath[begin][1];  //
+		insertS(i,S);
+		while(i!=begin){
+			i=path[begin][i]; //i的上一个节点 
+			insertS(i,S); 
+		}
+		printf("%d\n",numofpath[begin][0]+1);
+		while(S->top!=-1){
+			i=deleteS(S);
+			printf("%d %d\n",arry[i][0],arry[i][1]);
+		}
+		
+	}
+	
+
+
+	
+	
+	return 0;
+} 
