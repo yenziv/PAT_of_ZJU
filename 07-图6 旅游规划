@@ -1,0 +1,66 @@
+#include<stdio.h>
+#include<stdlib.h>
+
+int km[500][500]={0};
+int rmb[500][500]={0};
+int dist[500]={0};
+int expense[500]={0};
+int collect[500]={0};
+int N,M,S,D;
+
+void Dijkstra(int S){
+	int i,v,tmp;
+	while(1){
+		//v=未收录顶点中dist最小者 
+		tmp=300000;
+		for(i=0;i<N;i++){
+			if(!collect[i]&&dist[i]<tmp){
+				tmp=dist[i];
+				v=i;
+			}
+		}
+		//如果这样的V 不存在，break 
+		if(tmp==300000)
+			break;
+		//
+		collect[v]=1;
+		
+		for(i=0;i<N;i++){
+			if(km[v][i]!=0&&collect[i]==0)  //对于v的每个未收录邻接点 
+				if(dist[v]+km[v][i]<dist[i]){
+					dist[i]=dist[v]+km[v][i];
+					expense[i]=expense[v]+rmb[v][i];
+				}
+				if(dist[v]+km[v][i]==dist[i] && expense[v]+rmb[v][i]<expense[i]){
+					expense[i]=expense[v]+rmb[v][i];
+				}
+			
+		} 
+		
+		
+	}
+	
+}
+
+int main(){
+	scanf("%d %d %d %d",&N,&M,&S,&D);
+	int i,a1,a2,a3,a4;
+	for(i=0;i<M;i++){
+		scanf("%d %d %d %d",&a1,&a2,&a3,&a4);
+		km[a1][a2]=a3;
+		km[a2][a1]=a3;
+		rmb[a1][a2]=a4;
+		rmb[a2][a1]=a4;
+	}
+	
+	//先将dist初始化
+	for(i=0;i<N;i++){
+		dist[i]=260000;
+	} 
+	dist[S]=0;
+	
+	Dijkstra(S);
+	printf("%d %d",dist[D],expense[D]);
+	
+	return 0;
+}
