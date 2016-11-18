@@ -1,0 +1,122 @@
+#include<stdio.h>
+#include<stdlib.h>
+
+int N,M;
+
+int union1[1001]; 
+
+struct node{
+	int weight;
+	int v1;
+	int v2;
+};
+
+typedef struct Hnode{
+	struct node* element[4000];
+	int last;
+}minHeap;
+
+
+void insertHeap(minHeap* h,struct node* tmp){
+	int i;
+	i=++h->last;
+	for(;tmp->weight<h->element[i/2]->weight;i=i/2){
+		h->element[i]=h->element[i/2];
+	}
+	h->element[i]=tmp;
+}
+
+struct node* deleteHeap(minHeap* H){
+	struct node* head=H->element[1];
+	struct node* tmp=H->element[H->last--];
+	
+	int parent,son;
+	parent=1;
+	for(;parent*2<=H->last;parent=son){
+		son=parent*2;
+		if(son+1<=H->last&&H->element[son+1]->weight<H->element[son]->weight)
+			son++;
+		if(tmp->weight<=H->element[son]->weight)
+			break;
+		H->element[parent]=H->element[son];
+		
+	}
+	H->element[parent]=tmp;
+	return head;
+	
+}
+
+int findHeadOfUnion(int i){
+	int shang=i;
+	while(union1[shang]>0){  // 这里写错了  因为head的union[head]可能是任何负值 
+		shang=union1[shang];
+	}
+	return shang;
+}
+
+void to1(int a,int b){
+	int head1=findHeadOfUnion(a);
+	int head2=findHeadOfUnion(b);
+	if(union1[head1]<union1[head2]){  //union[head]里面用负数表示集合的节点数 
+		union1[head1]=union1[head1]+union1[head2];
+		union1[head2]=head1;
+	}else{
+		union1[head2]=union1[head2]+union1[head1];
+		union1[head1]=head2;
+	}
+	
+}
+
+int main(){
+	scanf("%d %d",&N,&M);
+	minHeap* H=(minHeap*)malloc(sizeof(minHeap));
+	H->last=0;
+	H->element[0]=(struct node*)malloc(sizeof(struct node));
+	H->element[0]->weight=-1;
+	
+
+	
+	int i,v1,v2,weight;
+	struct node* tmp;
+	for(i=0;i<M;i++){
+		scanf("%d %d %d",&v1,&v2,&weight);
+		tmp=(struct node*)malloc(sizeof(struct node));
+		tmp->v1=v1;
+		tmp->v2=v2;
+		tmp->weight=weight;
+		insertHeap(H,tmp);
+	}
+	
+
+	
+
+	int numofE=0; //记录收入MST的节点数，理论上MST=N-1 ,
+	int result=0; //记录总路程； 
+	//初始化并查集 
+	for(i=1;i<=N;i++){
+		union1[i]=-1;
+	}
+	
+
+	// problem
+	while(numofE<N-1&&H->last!=0){
+		tmp=deleteHeap(H);
+		if(findHeadOfUnion(tmp->v1)!=findHeadOfUnion(tmp->v2)){
+			to1(tmp->v1,tmp->v2);
+			numofE++;
+			result+=tmp->weight;
+		}
+		
+	} 
+	
+	
+	if(numofE!=N-1)
+		printf("-1");
+	else{
+		printf("%d",result);
+	}
+	
+	
+	
+	return 0;
+}
