@@ -1,0 +1,92 @@
+#include<stdio.h>
+#include<stdlib.h>
+
+int N,M;
+
+typedef struct node{
+	int element[100];
+	int rear;
+	int front;
+}queue;
+
+void insertQ(int i,queue* Q){
+	Q->rear=(Q->rear+1)%100;
+	Q->element[Q->rear]=i;
+}
+
+int deleteQ(queue* Q){
+	Q->front=(Q->front+1)%100;
+	return Q->element[Q->front];
+}
+
+int main(){
+	int graph[100][100]={0};
+	scanf("%d %d",&N,&M);
+	int ingreed[100]={0};
+	int early[100]={0};
+	int i,j,v1,v2,e;
+	//初始化graph为-1
+	for(i=0;i<N;i++)
+		for(j=0;j<N;j++)
+			graph[i][j]=-1;
+	
+	for(i=0;i<M;i++){
+		scanf("%d %d %d",&v1,&v2,&e);
+		graph[v1][v2]=e;
+	}
+	
+	// initial ingreed
+	int cnt;
+	for(i=0;i<N;i++){
+		cnt=0;
+		for(j=0;j<N;j++){
+			if(graph[j][i]!=-1)
+				cnt++;	
+		}
+		ingreed[i]=cnt;
+	}
+	
+	queue* Q=(queue*)malloc(sizeof(queue));
+	Q->front=Q->rear=0;
+	
+	cnt=0;
+	for(i=0;i<N;i++){
+		if(ingreed[i]==0){
+			insertQ(i,Q);
+			cnt++;
+		}
+	}
+	int tmp;
+	while(Q->front!=Q->rear){
+		tmp=deleteQ(Q);
+		//对于tmp的每个邻接点
+		for(j=0;j<N;j++){
+			if(graph[tmp][j]!=-1){
+				ingreed[j]--;
+				if(early[tmp]+graph[tmp][j]>early[j])
+					early[j]=early[tmp]+graph[tmp][j];
+				if(ingreed[j]==0){
+					insertQ(j,Q);
+					cnt++;
+				}
+			}
+		} 
+		
+	}
+	
+	if(cnt!=N)
+		printf("Impossible");
+	else{
+		cnt=0;
+		for(i=0;i<N;i++){
+			if(early[i]>cnt)
+				cnt=early[i];
+		}
+		printf("%d",cnt);
+		
+	}
+	
+	
+	
+	return 0;
+}
