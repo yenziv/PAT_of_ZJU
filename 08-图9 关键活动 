@@ -1,0 +1,179 @@
+#include<stdio.h>
+#include<stdlib.h>
+int N,M;
+
+//两条关键路径，多起点多终点 
+
+typedef struct snode{
+	int element[1000];
+	int top;
+}stack;
+
+typedef struct node{
+	int element[101];
+	int rear;
+	int front;
+}queue;
+
+void insertS(int i,stack* S){
+	S->element[++S->top]=i;   //把 = 与= =混淆 	
+} 
+
+int deleteS(stack* S){
+	return S->element[S->top--];
+}
+
+void insertQ(int i,queue* Q){
+	Q->rear=(Q->rear+1)%101;
+	Q->element[Q->rear]=i;
+}
+
+int deleteQ(queue* Q){
+	Q->front=(Q->front+1)%101;
+	return Q->element[Q->front];
+}
+
+int main(){
+	scanf("%d %d",&N,&M);
+	int C[101][101]={0};
+	int D[101][101]={0};
+	int early[101]={0};
+	int latest[101]={0};
+	int ingreed[101]={0};
+	int outgreed[101]={0};
+	int cnt;
+	//初始化C为-1 
+	int i,j;
+	for(i=1;i<=N;i++){
+		for(j=1;j<=N;j++)
+			C[i][j]=-1;
+	}
+	// read input
+	int v1,v2,c;
+	for(i=0;i<M;i++){
+		scanf("%d %d %d",&v1,&v2,&c);
+		C[v1][v2]=c;
+	}
+	//初始化 入度[]
+	for(j=1;j<=N;j++){
+		cnt=0;
+		for(i=1;i<=N;i++){
+			if(C[i][j]!=-1)
+				cnt++;
+		} 
+		ingreed[j]=cnt;
+	}
+	//初始化出度
+	 for(i=1;i<=N;i++){
+	 	cnt=0;
+	 	for(j=1;j<=N;j++){
+			if(C[i][j]!=-1){
+				cnt++;
+			}
+		 }
+		 outgreed[i]=cnt;
+	}
+	//initiate Q;
+	queue* Q=(queue*)malloc(sizeof(queue));
+	Q->front=Q->rear=0;
+	//initiate S
+	stack* S=(stack*)malloc(sizeof(stack));
+	S->top=-1;
+	//
+	
+	cnt=0;
+	for(i=1;i<=N;i++){
+		if(ingreed[i]==0){   //这个条件别写错了 
+			insertQ(i,Q);
+			cnt++;
+			insertS(i,S);
+		}
+	}
+	int tmp;
+	while(Q->front!=Q->rear){
+		tmp=deleteQ(Q);
+		for(j=1;j<=N;j++){
+			if(C[tmp][j]!=-1){
+				ingreed[j]--;
+				if(early[tmp]+C[tmp][j]>early[j])
+					early[j]=early[tmp]+C[tmp][j];
+				if(ingreed[j]==0){
+					insertQ(j,Q);
+					cnt++;
+					insertS(j,S);
+				}		
+			} 
+		}
+	}
+	
+
+	
+	if(cnt!=N)
+		printf("0");
+	else{
+		//初始化 latest
+		for(i=1;i<=N;i++)
+			latest[i]=100000;
+		for(i=0;i<N;i++){  //依次从堆栈中弹出 
+			tmp=deleteS(S);
+		//
+		//	printf("%d\n",tmp);
+			if(outgreed[tmp]==0){
+				latest[tmp]=early[tmp];
+			}
+			else{
+				for(j=1;j<=N;j++){
+					if(C[tmp][j]!=-1){
+						if(latest[j]-C[tmp][j]<latest[tmp])
+							latest[tmp]=latest[j]-C[tmp][j];
+					} 
+				}
+			}
+		}
+		
+	//smian zhege you wenti
+		//找出early中的最大值并输出
+		cnt=0;
+		int maxpoint;
+		for(i=1;i<=N;i++){
+			if(early[i]>cnt){
+				cnt=early[i];
+				maxpoint=i;
+			}
+		} 
+		printf("%d\n",cnt);
+		//D
+		for(i=1;i<=N;i++){
+			for(j=N;j>=1;j--){
+				if(C[i][j]!=-1){
+					D[i][j]=latest[j]-early[i]-C[i][j];
+					//if(D[i][j]==0)
+					//	printf("%d->%d\n",i,j);      错了，不应该在这里printf ，应该从日期最长的点倒推回去，标记 最长关键路径，然后再遍历一遍输出 
+				}
+			}
+		}
+		//
+		int tag[101][101]={0};//标记关键路径 
+		Q->front=Q->rear=0;
+		insertQ(maxpoint,Q);
+		while(Q->front!=Q->rear){
+			tmp=deleteQ(Q);
+			for(i=1;i<=N;i++){
+				if(C[i][tmp]!=-1&&D[i][tmp]==0){
+					insertQ(i,Q);
+					tag[i][tmp]=1;
+				}
+			}
+		}
+		//printf
+		for(i=1;i<=N;i++)
+			for(j=N;j>=1;j--){
+				if(tag[i][j]==1)
+					printf("%d->%d\n",i,j);
+			}
+		
+	}
+	
+	 
+	return 0;
+}
